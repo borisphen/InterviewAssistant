@@ -12,6 +12,7 @@ jobs:
     environment: Environment
     env:
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      GRADLE_OPTS: -Dorg.gradle.daemon=false
     
     steps:
       - uses: actions/checkout@v4
@@ -25,28 +26,51 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v2
 
+      - name: Create local.properties
+        run: echo "sdk.dir=$ANDROID_HOME" > local.properties
+
       - name: Validate API Key
         run: |
           if [ -z "$GROQ_API_KEY" ]; then
             echo "::error::GROQ_API_KEY не установлен!"
             exit 1
           fi
-          echo "✅ API Key получен"
+          echo "✅ API Key получен (длина: ${#GROQ_API_KEY} символов)"
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Cache Gradle
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
 
       - name: Build Debug APK
         run: ./gradlew assembleDebug -DGROQ_API_KEY="$GROQ_API_KEY"
+
+      - name: Verify BuildConfig
+        run: |
+          FILE="app/build/generated/source/buildConfig/debug/com/borisphen/interviewassistant/BuildConfig.java"
+          if grep -q 'public static final String GROQ_API_KEY = "' "$FILE"; then
+            echo "✅ BuildConfig сгенерирован корректно"
+          else
+            echo "::error::Не удалось сгенерировать BuildConfig!"
+            exit 1
+          fi
 
       - name: Create Release
         id: create-release
         if: github.ref == 'refs/heads/master'
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
         with:
           tag_name: debug-v${{ github.run_number }}
           release_name: Debug v${{ github.run_number }}
           body: |
             Debug build for commit: ${{ github.sha }}
+            Собран автоматически через GitHub Actions.
           draft: false
           prerelease: false
 
@@ -54,10 +78,10 @@ jobs:
         if: github.ref == 'refs/heads/master'
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
-          asset_path: ./app/build/outputs/apk/debug/app-debug.apk
+          asset_path: app/build/outputs/apk/debug/app-debug.apk
           asset_name: app-debug.apk
           asset_content_type: application/vnd.android.package-archive
 
@@ -68,6 +92,7 @@ jobs:
           to: '@Borisphen'
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            🚀 Новая debug-сборка!
+            🚀 Новая debug-сборка Android-приложения!
             • Версия: debug-v${{ github.run_number }}
             • Ссылка: https://github.com/${{ github.repository }}/releases/tag/debug-v${{ github.run_number }}
+            • Коммит: ${{ github.sha }}
