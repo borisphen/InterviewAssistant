@@ -30,8 +30,14 @@ jobs:
       - name: Create local.properties
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties
-      #          echo "GROQ_API_KEY=$GROQ_API_KEY" >> local.properties  # Используем env
-
+          echo "GROQ_API_KEY=$GROQ_API_KEY" >> local.properties  # Используем env
+          if [ -z "$GROQ_API_KEY" ]; then
+            echo "❌ GROQ_API_KEY пуст!"
+            exit 1
+          else
+            echo "✅ Ключ передан (длина: ${#GROQ_API_KEY})"
+          fi
+      
       - name: Debug output
         run: |
           echo "Реальный ключ: ${ { secrets.GROQ_API_KEY } }"  # Проверьте вывод в логах
