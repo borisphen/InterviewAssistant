@@ -9,6 +9,8 @@ on:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
+    permissions: # Добавляем явные права
+      contents: write  # Необходимо для создания релиза
     environment: Environment
     env:
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
@@ -89,7 +91,7 @@ jobs:
         if: github.ref == 'refs/heads/master'
         uses: appleboy/telegram-action@master
         with:
-          to: '@Borisphen'
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
             🚀 Новая debug-сборка Android-приложения!
