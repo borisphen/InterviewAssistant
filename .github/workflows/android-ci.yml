@@ -9,7 +9,9 @@ on:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
-
+    env:
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}  # Явно поднимаем в env
+    
     steps:
       # 1. Checkout кода
       - uses: actions/checkout@v4
@@ -27,7 +29,10 @@ jobs:
       - name: Create local.properties
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties
-          echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" >> local.properties
+          echo "GROQ_API_KEY=$GROQ_API_KEY" >> local.properties  # Используем env
+
+      - name: Debug output
+        run: cat local.properties  # Проверяем содержимое    
 
       # 3. Даем права на gradlew
       - name: Make gradlew executable
