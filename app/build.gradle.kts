@@ -38,7 +38,7 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "GROQ_API_KEY", groqApiKey)
+            buildConfigField("String", "GROQ_API_KEY", "\"$groqApiKey\"")
         }
         release {
             isMinifyEnabled = false
@@ -46,7 +46,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            buildConfigField("String", "GROQ_API_KEY", groqApiKey)
+            buildConfigField("String", "GROQ_API_KEY", "\"$groqApiKey\"")
         }
     }
     compileOptions {
