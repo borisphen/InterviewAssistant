@@ -30,18 +30,24 @@ jobs:
       - name: Create local.properties
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties
-          echo "GROQ_API_KEY=$GROQ_API_KEY" >> local.properties  # Используем env
+          echo "GROQ_API_KEY=$GROQ_API_KEY" >> local.properties
+          
+          # Проверка длины ключа (без раскрытия значения)
           if [ -z "$GROQ_API_KEY" ]; then
             echo "❌ GROQ_API_KEY пуст!"
             exit 1
           else
-            echo "✅ Ключ передан (длина: ${#GROQ_API_KEY})"
+            echo "✅ Ключ получен (длина: ${#GROQ_API_KEY} символов)"
           fi
-      
-      - name: Debug output
+
+      - name: Validate BuildConfig
         run: |
-          echo "Реальный ключ: ${ { secrets.GROQ_API_KEY } }"  # Проверьте вывод в логах
-            ./gradlew clean
+          # Проверяем, что ключ попал в local.properties
+          if ! grep -q "GROQ_API_KEY=" local.properties; then
+            echo "❌ Ключ не записался в local.properties!"
+            exit 1
+          fi
+          echo "✅ local.properties содержит GROQ_API_KEY"
 
       # 3. Даем права на gradlew
       - name: Make gradlew executable
