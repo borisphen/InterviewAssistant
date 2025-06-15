@@ -30,24 +30,15 @@ jobs:
       - name: Create local.properties
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties
-          echo "GROQ_API_KEY=$GROQ_API_KEY" >> local.properties
-          
-          # Проверка длины ключа (без раскрытия значения)
-          if [ -z "$GROQ_API_KEY" ]; then
-            echo "❌ GROQ_API_KEY пуст!"
-            exit 1
-          else
-            echo "✅ Ключ получен (длина: ${#GROQ_API_KEY} символов)"
-          fi
+          #          echo "GROQ_API_KEY=$GROQ_API_KEY" >> local.properties
 
-      - name: Validate BuildConfig
+      - name: Validate API Key
         run: |
-          # Проверяем, что ключ попал в local.properties
-          if ! grep -q "GROQ_API_KEY=" local.properties; then
-            echo "❌ Ключ не записался в local.properties!"
+          if [ -z "$GROQ_API_KEY" ]; then
+            echo "::error::GROQ_API_KEY не установлен в Secrets окружения 'Environment'!"
             exit 1
           fi
-          echo "✅ local.properties содержит GROQ_API_KEY"
+          echo "✅ API Key получен (длина: ${#GROQ_API_KEY} символов)"
 
       # 3. Даем права на gradlew
       - name: Make gradlew executable
@@ -62,7 +53,18 @@ jobs:
 
       # 5. Сборка debug-версии
       - name: Build Debug APK
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleDebug -PGROQ_API_KEY="$GROQ_API_KEY"
+
+      - name: Verify BuildConfig
+        run: |
+          # Проверяем сгенерированный файл
+          FILE="app/build/generated/source/buildConfig/debug/com/borisphen/interviewassistant/BuildConfig.java"
+          if grep -q 'public static final String GROQ_API_KEY = "' "$FILE"; then
+            echo "✅ BuildConfig сгенерирован корректно"
+          else
+            echo "::error::Не удалось сгенерировать BuildConfig!"
+            exit 1
+          fi
 
       # 6. Создание GitHub Release и загрузка APK
       - name: Upload APK to GitHub Releases
