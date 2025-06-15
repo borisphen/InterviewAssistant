@@ -13,7 +13,14 @@ val localProperties = Properties().apply {
     load(rootProject.file("local.properties").inputStream())
 }
 
-val groqApiKey = localProperties.getProperty("GROQ_API_KEY") ?: System.getenv("GROQ_API_KEY") ?: ""
+val groqApiKey = System.getenv("GROQ_API_KEY") ?: localProperties.getProperty("GROQ_API_KEY")
+?: throw GradleException(
+    """
+                GROQ_API_KEY не найден! Добавьте его:
+                1. В переменные окружения (для CI)
+                2. В local.properties (для локальной сборки)
+            """.trimIndent()
+)
 
 android {
     namespace = "com.borisphen.interviewassistant"

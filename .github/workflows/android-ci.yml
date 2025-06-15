@@ -30,10 +30,12 @@ jobs:
       - name: Create local.properties
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties
-          echo "GROQ_API_KEY=$GROQ_API_KEY" >> local.properties  # Используем env
+      #          echo "GROQ_API_KEY=$GROQ_API_KEY" >> local.properties  # Используем env
 
       - name: Debug output
-        run: cat local.properties  # Проверяем содержимое    
+        run: |
+          echo "Реальный ключ: ${ { secrets.GROQ_API_KEY } }"  # Проверьте вывод в логах
+            ./gradlew clean
 
       # 3. Даем права на gradlew
       - name: Make gradlew executable
