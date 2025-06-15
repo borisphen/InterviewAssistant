@@ -98,3 +98,4 @@ jobs:
             • Версия: debug-v${{ github.run_number }}
             • Ссылка: https://github.com/${{ github.repository }}/releases/tag/debug-v${{ github.run_number }}
             • Коммит: ${{ github.sha }}
+            
