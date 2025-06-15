@@ -25,7 +25,9 @@ jobs:
         uses: android-actions/setup-android@v2
 
       - name: Create local.properties
-        run: echo "sdk.dir=$ANDROID_HOME" > local.properties
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          echo "groq.api.key=${{ secrets.GROQ_API_KEY }}" >> local.properties
 
       # 3. Даем права на gradlew
       - name: Make gradlew executable
